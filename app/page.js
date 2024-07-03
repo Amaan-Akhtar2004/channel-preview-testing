@@ -4,10 +4,18 @@ import ImageGallery from "./components/ImageGallery";
 import { useEffect, useState } from "react";
 import Loader from "./components/loader";
 import Link from "next/link";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+  Button,
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
-  const [imagePaths, setImagePaths] = useState([]);
+  const [imagePaths, setImagePaths] = useState({});
 
   useEffect(() => {
     fetchImagePaths();
@@ -20,7 +28,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
       });
       const data = await response.json();
-      console.log("Image Paths",data);
+      console.log("Image Paths", data);
       setImagePaths(data);
     } catch (error) {
       console.error("Failed to fetch image paths:", error);
@@ -44,30 +52,40 @@ export default function Home() {
   };
 
   return (
-    <div className="text-align:center">
+    <div style={{ textAlign: 'center' }}>
       <h1 className="head-text">Channel Preview Testing</h1>
 
       {loading ? (
         <Loader type="TailSpin" color="#00BFFF" height={50} width={50} />
       ) : (
-        <button
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 m-2 rounded"
+        <Button
+          variant="contained"
+          color="primary"
           onClick={runTest}
-          disabled={loading} // Disable button when loading
+          disabled={loading}
+          style={{ margin: '10px' }}
         >
           Run Test
-        </button>
+        </Button>
       )}
       <Link href="./admin">
-        <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 m-2 rounded">
+        <Button variant="contained" color="secondary" style={{ margin: '10px' }}>
           Go to Admin Page
-        </button>
+        </Button>
       </Link>
       {Object.keys(imagePaths).map(jobDate => (
-        <div key={jobDate}>
-          <h2>{jobDate}</h2>
-          <ImageGallery imagePaths={imagePaths[jobDate]} />
-        </div>
+        <Accordion key={jobDate}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls={`${jobDate}-content`}
+            id={`${jobDate}-header`}
+          >
+            <Typography variant="h6">{jobDate}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <ImageGallery imagePaths={imagePaths[jobDate]} onFixedSuccess={fetchImagePaths} />
+          </AccordionDetails>
+        </Accordion>
       ))}
     </div>
   );
