@@ -4,22 +4,21 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Button from '@mui/material/Button';
 
-const ImageGallery = ({ imagePaths, onFixedSuccess, showFixedButton }) => {
+const ImageGallery = ({ imagePaths, showFixedButton, onFixedSuccess,jobId }) => {
   const labels = ["old", "new", "difference"];
-  const [loading, setLoading] = useState(false); // State for loading indicator
+  const [loading, setLoading] = useState(false); 
   const [selectedPlatform, setSelectedPlatform] = useState('');
 
   useEffect(() => {
     console.log('Image paths updated:', imagePaths);
-    // Set default selected platform if imagePaths has platforms
+    console.log('fixed button:', showFixedButton);
     if (Object.keys(imagePaths).length > 0) {
       setSelectedPlatform(Object.keys(imagePaths)[0]);
     }
   }, [imagePaths]);
 
-  const fixed = async (platform, folder, referenceUrl, onFixedSuccess) => {
-    setLoading(true); // Set loading to true when fixing starts
-
+  const fixed = async (platform, folder, referenceUrl,jobId) => {
+    setLoading(true);
     try {
       const response = await fetch("/api/fixed", {
         method: "POST",
@@ -27,20 +26,18 @@ const ImageGallery = ({ imagePaths, onFixedSuccess, showFixedButton }) => {
         body: JSON.stringify({
           channel: platform,
           referenceUrl,
+          jobId
         })
       });
-      console.log(response);
-
-      // Call the callback to refresh image paths
       if (response.ok) {
         onFixedSuccess();
       }
     } catch (err) {
-      console.log(err);
+      console.log("Failed to fix image:", err);
     } finally {
-      setLoading(false); // Set loading to false when fixing ends (success or error)
+      setLoading(false);
     }
-  }
+  };
 
   const handlePlatformChange = (event) => {
     setSelectedPlatform(event.target.value);
@@ -55,7 +52,7 @@ const ImageGallery = ({ imagePaths, onFixedSuccess, showFixedButton }) => {
           displayEmpty
           inputProps={{ 'aria-label': 'Select platform' }}
         >
-          {Object.keys(imagePaths).map((platform, index) => (
+          {Object.keys(imagePaths).map((platform) => (
             <MenuItem key={platform} value={platform}>
               {platform.charAt(0).toUpperCase() + platform.slice(1)}
             </MenuItem>
@@ -74,8 +71,8 @@ const ImageGallery = ({ imagePaths, onFixedSuccess, showFixedButton }) => {
                   <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => fixed(selectedPlatform, folder, imagePaths[selectedPlatform][folder][0], onFixedSuccess)}
-                    disabled={loading} // Disable button when loading
+                    onClick={() => fixed(selectedPlatform, folder, imagePaths[selectedPlatform][folder][0],jobId)}
+                    disabled={loading}
                     style={{ marginLeft: '10px' }}
                   >
                     {loading ? 'Fixing...' : 'Fixed'}

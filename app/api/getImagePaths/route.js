@@ -1,22 +1,38 @@
 import connectToDatabase from '@/app/lib/mongodb.mjs';
 import JobResult from '@/app/lib/models/resultSchema.mjs';
-// Define the GET handler
+
 export const revalidate = 0; // this is the new line added for vercel
 
-export async function GET() {
+export async function GET(request) {
+  const url = new URL(request.url);
+  const jobId = url.searchParams.get('jobId');
+
   try {
     await connectToDatabase();
 
-    const results = await JobResult.find({});
-    // Initialize an empty object to store formatted results
+    let results;
+    if (jobId) {
+      results = await JobResult.find({ _id: jobId });
+    } else {
+      results = await JobResult.find({});
+    }
+
     const formattedResults = {};
 
-    // Transform data to get an object of image paths by platform and job date
     results.forEach(result => {
-      const jobDate = result.jobDate.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata',year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',second: '2-digit',hour12: true}); // Format the job date as YYYY-MM-DD
+      const formattedJobDate = result.jobDate.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }).replace(/[\s,]/g, '-').replace(/--/g, '-');
 
-      if (!formattedResults[jobDate]) {
-        formattedResults[jobDate] = {};
+      if (!formattedResults[formattedJobDate]) {
+        formattedResults[formattedJobDate] = {};
       }
 
       result.platforms.forEach(platform => {
@@ -28,12 +44,12 @@ export async function GET() {
           diffUrl: image.diffUrl
         }));
 
-        if (!formattedResults[jobDate][platformName]) {
-          formattedResults[jobDate][platformName] = {};
+        if (!formattedResults[formattedJobDate][platformName]) {
+          formattedResults[formattedJobDate][platformName] = {};
         }
 
         images.forEach(image => {
-          formattedResults[jobDate][platformName][image.imageName] = [
+          formattedResults[formattedJobDate][platformName][image.imageName] = [
             image.referenceUrl,
             image.testUrl,
             image.diffUrl
@@ -41,9 +57,7 @@ export async function GET() {
         });
       });
     });
-
     console.log(formattedResults);
-
     return new Response(JSON.stringify(formattedResults), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }

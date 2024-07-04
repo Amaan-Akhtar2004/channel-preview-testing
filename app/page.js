@@ -1,6 +1,4 @@
-"use client"
-
-import ImageGallery from "./components/ImageGallery";
+"use client";
 import { useEffect, useState } from "react";
 import Loader from "./components/loader";
 import Link from "next/link";
@@ -10,28 +8,38 @@ import {
   AccordionDetails,
   Typography,
   Button,
-} from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+  IconButton,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
-  const [imagePaths, setImagePaths] = useState({});
+  const [jobData, setJobData] = useState([]);
 
   useEffect(() => {
-    fetchImagePaths();
+    fetchJobData();
   }, []);
 
-  const fetchImagePaths = async () => {
+  const fetchJobData = async () => {
     try {
-      const response = await fetch("/api/getImagePaths", {
+      setLoading(true);
+      const response = await fetch("/api/getPaths", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
+      if (!response.ok) {
+        throw new Error("Failed to fetch job data");
+      }
       const data = await response.json();
-      console.log("Image Paths", data);
-      setImagePaths(data);
+      // Sort job data by date in descending order (most recent first)
+      const sortedData = data.sort((a, b) => new Date(b.jobDate) - new Date(a.jobDate));
+      console.log("Sorted Job Data", sortedData);
+      setJobData(sortedData);
     } catch (error) {
-      console.error("Failed to fetch image paths:", error);
+      console.error("Error fetching job data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,21 +50,43 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
-      // After test completes, fetch image paths again to update the gallery
-      await fetchImagePaths();
-    } catch (err) {
-      console.log("Error running test:", err);
+      if (!response.ok) {
+        throw new Error("Failed to run test");
+      }
+      // Refresh job data after test completion
+      await fetchJobData();
+    } catch (error) {
+      console.error("Error running test:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Get job dates and sort them in descending order
-  const jobDates = Object.keys(imagePaths).sort((a, b) => new Date(b) - new Date(a));
-  const mostRecentJobDate = jobDates.length ? jobDates[0] : '';
+  const deleteJob = async (jobId) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/deleteJob?jobId=${jobId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete job");
+      }
+      // Refresh job data after deletion
+      await fetchJobData();
+    } catch (error) {
+      console.error("Error deleting job:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatJobDate = (date) => {
+    return date.replace(/[,\s/]/g, "-");
+  };
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div style={{ textAlign: "center" }}>
       <h1 className="head-text">Channel Preview Testing</h1>
 
       {loading ? (
@@ -67,31 +97,38 @@ export default function Home() {
           color="primary"
           onClick={runTest}
           disabled={loading}
-          style={{ margin: '10px' }}
+          style={{ margin: "10px" }}
         >
           Run Test
         </Button>
       )}
-      <Link href="./admin">
-        <Button variant="contained" color="secondary" style={{ margin: '10px' }}>
+      <Link href="/admin">
+        <Button variant="contained" color="secondary" style={{ margin: "10px" }}>
           Go to Admin Page
         </Button>
       </Link>
-      {jobDates.map(jobDate => (
-        <Accordion key={jobDate}>
+      {jobData.map(({ jobId, jobDate }) => (
+        <Accordion key={jobId}>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
-            aria-controls={`${jobDate}-content`}
-            id={`${jobDate}-header`}
+            aria-controls={`${formatJobDate(jobDate)}-content`}
+            id={`${formatJobDate(jobDate)}-header`}
           >
             <Typography variant="h6">{jobDate}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <ImageGallery
-              imagePaths={imagePaths[jobDate]}
-              onFixedSuccess={fetchImagePaths}
-              showFixedButton={jobDate === mostRecentJobDate}
-            />
+            <Link href={`/job/${jobId}`}>
+              <Button variant="contained" color="primary" style={{ marginRight: "10px" }}>
+                View Details
+              </Button>
+            </Link>
+            <IconButton
+              aria-label="delete"
+              onClick={() => deleteJob(jobId)}
+              disabled={loading}
+            >
+              <DeleteIcon />
+            </IconButton>
           </AccordionDetails>
         </Accordion>
       ))}
