@@ -178,6 +178,7 @@ export const POST = async () => {
                           + "/" + currentdate.getFullYear() + " @ " 
                           + currentdate.getHours() + ":" 
                           + currentdate.getMinutes() + ":" + currentdate.getSeconds();
+      console.log("test run at : ",datetime);
       const result = new JobResult({
         "jobDate": datetime,
         platforms: dataToSave,

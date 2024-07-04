@@ -9,6 +9,8 @@ import {
   Typography,
   Button,
   IconButton,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -16,6 +18,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [jobData, setJobData] = useState([]);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     fetchJobData();
@@ -74,15 +78,21 @@ export default function Home() {
       }
       // Refresh job data after deletion
       await fetchJobData();
+      setSuccessMessage("Job deleted successfully");
     } catch (error) {
       console.error("Error deleting job:", error);
+      setErrorMessage("Failed to delete job");
     } finally {
       setLoading(false);
     }
   };
-
-  const formatJobDate = (date) => {
-    return date.replace(/[,\s/]/g, "-");
+  
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSuccessMessage("");
+    setErrorMessage("");
   };
 
   return (
@@ -111,8 +121,8 @@ export default function Home() {
         <Accordion key={jobId}>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
-            aria-controls={`${formatJobDate(jobDate)}-content`}
-            id={`${formatJobDate(jobDate)}-header`}
+            aria-controls={`${jobDate}-content`}
+            id={`${jobDate}-header`}
           >
             <Typography variant="h6">{jobDate}</Typography>
           </AccordionSummary>
@@ -132,6 +142,16 @@ export default function Home() {
           </AccordionDetails>
         </Accordion>
       ))}
+      <Snackbar open={!!successMessage} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="success">
+          {successMessage}
+        </Alert>
+      </Snackbar>
+      <Snackbar open={!!errorMessage} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="error">
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import ImageGallery from "@/app/components/ImageGallery";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -10,18 +10,18 @@ export default function JobGallery() {
   const pathname = usePathname();
   const jobId = pathname.split("/").pop();
   const [loading, setLoading] = useState(false);
-  const [imagePaths, setImagePaths] = useState({});
   const [mostRecentJobId, setMostRecentJobId] = useState(null);
-
-  useEffect(() => {
-    if (jobId) {
-      fetchImagePaths(jobId);
-    }
-  }, [jobId]);
+  const [jobDate, setJobDate] = useState(null);
 
   useEffect(() => {
     fetchMostRecentJobId();
   }, []);
+
+  useEffect(() => {
+    if (jobId) {
+      fetchJobDate(jobId);
+    }
+  }, [jobId]);
 
   const fetchMostRecentJobId = async () => {
     try {
@@ -41,67 +41,62 @@ export default function JobGallery() {
     }
   };
 
-  const fetchImagePaths = async (id) => {
+  const fetchJobDate = async (jobId) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/getImagePaths?jobId=${id}`, {
-        method: "GET",
+      const response = await fetch(`/api/getJobDate`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId,
+        })
       });
 
       if (response.ok) {
         const data = await response.json();
-        const formattedData = {};
-        Object.keys(data).forEach((dateKey) => {
-          Object.keys(data[dateKey]).forEach((platform) => {
-            if (!formattedData[platform]) {
-              formattedData[platform] = {};
-            }
-            Object.keys(data[dateKey][platform]).forEach((folder) => {
-              if (!formattedData[platform][folder]) {
-                formattedData[platform][folder] = [];
-              }
-              formattedData[platform][folder] = data[dateKey][platform][folder];
-            });
-          });
-        });
-        setImagePaths(formattedData);
+        setJobDate(formatDate(data.jobDate));
       } else {
-        console.error("Failed to fetch image paths:", response.status);
+        console.error("Failed to fetch job date:", response.status);
       }
     } catch (error) {
-      console.error("Failed to fetch image paths:", error);
+      console.error("Failed to fetch job date:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFixedSuccess = () => {
-    if (jobId) {
-      fetchImagePaths(jobId);
-    }
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const istOptions = {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    };
+    const istDateFormatted = date.toLocaleString('en-IN', istOptions);
+    return istDateFormatted;
   };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <h1 className="head-text">Job Gallery for {jobId}</h1>
+    <div style={{ textAlign: "center", margin: "20px", padding: "20px", border: "1px solid #ddd", borderRadius: "10px", backgroundColor: "#f9f9f9" }}>
+      <h1 className="head-text" style={{ color: "#333", marginBottom: "20px" }}>Image Gallery For Job Dated {jobDate}</h1>
       {loading ? (
         <Loader type="TailSpin" color="#00BFFF" height={50} width={50} />
       ) : (
         <ImageGallery
-          imagePaths={imagePaths}
           showFixedButton={mostRecentJobId === jobId}
-          onFixedSuccess={handleFixedSuccess}
-          jobId = {jobId}
+          jobId={jobId}
         />
       )}
-      {mostRecentJobId === jobId && (
-        <Link href="/">
-          <Button variant="contained" color="primary" style={{ margin: "10px" }}>
-            Back to Home
-          </Button>
-        </Link>
-      )}
+      <Link href="/">
+        <Button variant="contained" color="primary" style={{ margin: "10px" }}>
+          Back to Home
+        </Button>
+      </Link>
     </div>
   );
 }
