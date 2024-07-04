@@ -51,6 +51,10 @@ export default function Home() {
     }
   };
 
+  // Get job dates and sort them in descending order
+  const jobDates = Object.keys(imagePaths).sort((a, b) => new Date(b) - new Date(a));
+  const mostRecentJobDate = jobDates.length ? jobDates[0] : '';
+
   return (
     <div style={{ textAlign: 'center' }}>
       <h1 className="head-text">Channel Preview Testing</h1>
@@ -73,7 +77,7 @@ export default function Home() {
           Go to Admin Page
         </Button>
       </Link>
-      {Object.keys(imagePaths).map(jobDate => (
+      {jobDates.map(jobDate => (
         <Accordion key={jobDate}>
           <AccordionSummary
             expandIcon={<ExpandMoreIcon />}
@@ -83,7 +87,11 @@ export default function Home() {
             <Typography variant="h6">{jobDate}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <ImageGallery imagePaths={imagePaths[jobDate]} onFixedSuccess={fetchImagePaths} />
+            <ImageGallery
+              imagePaths={imagePaths[jobDate]}
+              onFixedSuccess={fetchImagePaths}
+              showFixedButton={jobDate === mostRecentJobDate}
+            />
           </AccordionDetails>
         </Accordion>
       ))}

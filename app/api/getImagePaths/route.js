@@ -1,7 +1,7 @@
 import connectToDatabase from '@/app/lib/mongodb.mjs';
 import JobResult from '@/app/lib/models/resultSchema.mjs';
 // Define the GET handler
-export const revalidate = 0;
+export const revalidate = 0; // this is the new line added for vercel
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
 
     // Transform data to get an object of image paths by platform and job date
     results.forEach(result => {
-      const jobDate = result.jobDate.toLocaleString(); // Format the job date as YYYY-MM-DD
+      const jobDate = result.jobDate.toLocaleString('en-IN', {timeZone: 'Asia/Kolkata',year: 'numeric',month: '2-digit',day: '2-digit',hour: '2-digit',minute: '2-digit',second: '2-digit',hour12: true}); // Format the job date as YYYY-MM-DD
 
       if (!formattedResults[jobDate]) {
         formattedResults[jobDate] = {};

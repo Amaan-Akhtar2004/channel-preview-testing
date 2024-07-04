@@ -4,7 +4,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Button from '@mui/material/Button';
 
-const ImageGallery = ({ imagePaths, onFixedSuccess }) => {
+const ImageGallery = ({ imagePaths, onFixedSuccess, showFixedButton }) => {
   const labels = ["old", "new", "difference"];
   const [loading, setLoading] = useState(false); // State for loading indicator
   const [selectedPlatform, setSelectedPlatform] = useState('');
@@ -65,20 +65,22 @@ const ImageGallery = ({ imagePaths, onFixedSuccess }) => {
 
       {selectedPlatform && (
         <div>
-        <br />
+          <br />
           {Object.keys(imagePaths[selectedPlatform]).map((folder, idx) => (
             <div key={idx} style={{ marginBottom: '20px' }}>
               <h3 style={{ marginBottom: '10px' }}>
                 {folder}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => fixed(selectedPlatform, folder, imagePaths[selectedPlatform][folder][0], onFixedSuccess)}
-                  disabled={loading} // Disable button when loading
-                  style={{ marginLeft: '10px' }}
-                >
-                  {loading ? 'Fixing...' : 'Fixed'}
-                </Button>
+                {showFixedButton && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => fixed(selectedPlatform, folder, imagePaths[selectedPlatform][folder][0], onFixedSuccess)}
+                    disabled={loading} // Disable button when loading
+                    style={{ marginLeft: '10px' }}
+                  >
+                    {loading ? 'Fixing...' : 'Fixed'}
+                  </Button>
+                )}
               </h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: "space-around", gap: '20px' }}>
                 {imagePaths[selectedPlatform][folder].map((imagePath, imgIdx) => (
