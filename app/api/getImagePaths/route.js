@@ -1,6 +1,8 @@
 import connectToDatabase from '@/app/lib/mongodb.mjs';
 import JobResult from '@/app/lib/models/resultSchema.mjs';
 // Define the GET handler
+export const revalidate = 0;
+
 export async function GET() {
   try {
     await connectToDatabase();
