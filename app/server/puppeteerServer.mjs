@@ -114,7 +114,7 @@ app.post('/screenshot', async (req, res) => {
 
       if (element) {
         const screenshotBuffer = await element.screenshot({ encoding: 'binary' });
-        const screenshotName = `${directory}/${channel}/${name}_${viewport.height}x${viewport.width}`;
+        const screenshotName = `unique_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
         const uploadResult = await new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
@@ -140,6 +140,7 @@ app.post('/screenshot', async (req, res) => {
           url: uploadResult.secure_url,
           channel
         };
+        console.log(screenshotData);
         if(directory==='reference'){
           const newScreenshot = new ScreenshotReference(screenshotData);
           newScreenshot.save()
@@ -190,36 +191,36 @@ app.post('/screenshot', async (req, res) => {
 
 app.use('/screenshots', express.static(path.join(new URL(import.meta.url).pathname, 'screenshots')));
 
-app.post('/add', async (req, res) => {
-  try {
-      const { channelName, divSelector , data , code } = req.body;
-      console.log(channelName);
-      // Validate request body
-      if (!channelName || !data || !divSelector || !Array.isArray(data) || data.length === 0) {
-          return res.status(400).json({ error: 'Invalid request body' });
-      }
-      // Check if channelName already exists
-      const existingChannel = await SocialMedia.findOne({ channelName });
-      if (existingChannel) {
-          return res.status(400).json({ error: 'Channel already exists' });
-      }
-      // Create new instance of SocialMedia
-      const socialMediaData = new SocialMedia({
-          channelName,
-          divSelector,
-          data,
-          code
-      });
+// app.post('/add', async (req, res) => {
+//   try {
+//       const { channelName, divSelector , data , code } = req.body;
+//       console.log(channelName);
+//       // Validate request body
+//       if (!channelName || !data || !divSelector || !Array.isArray(data) || data.length === 0) {
+//           return res.status(400).json({ error: 'Invalid request body' });
+//       }
+//       // Check if channelName already exists
+//       const existingChannel = await SocialMedia.findOne({ channelName });
+//       if (existingChannel) {
+//           return res.status(400).json({ error: 'Channel already exists' });
+//       }
+//       // Create new instance of SocialMedia
+//       const socialMediaData = new SocialMedia({
+//           channelName,
+//           divSelector,
+//           data,
+//           code
+//       });
 
-      // Save to database
-      const savedData = await socialMediaData.save();
+//       // Save to database
+//       const savedData = await socialMediaData.save();
 
-      res.status(201).json(savedData);
-  } catch (error) {
-      console.error('Error adding social media data:', error);
-      res.status(500).json({ error: 'Failed to add social media data' });
-  }
-});
+//       res.status(201).json(savedData);
+//   } catch (error) {
+//       console.error('Error adding social media data:', error);
+//       res.status(500).json({ error: 'Failed to add social media data' });
+//   }
+// });
 
 
 const startServer = async () => {

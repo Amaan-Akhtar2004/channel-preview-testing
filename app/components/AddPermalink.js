@@ -26,7 +26,6 @@ const AddPermalink = ({ channels }) => {
     setLoading(true);
 
     try {
-      console.log(inputUrl);
       const response = await fetch('/api/socialmedia/addLink', {
         method: 'POST',
         headers: {
@@ -42,12 +41,9 @@ const AddPermalink = ({ channels }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.message === 'URL already exists') {
-          setError('This URL already exists in the selected channel.');
-        } else {
-          setError('Failed to add URL. Please try again.');
-        }
-        throw new Error(data.message);
+        console.log("response : ",data.message);
+        setError(data.message || 'Failed to add URL. Please try again.');
+        throw new Error(data.message || 'Failed to add URL');
       }
 
       setSuccess('URL added successfully');
@@ -57,10 +53,8 @@ const AddPermalink = ({ channels }) => {
 
       console.log('Response:', data);
     } catch (error) {
-      console.error('Error adding URL:', error);
-      if (!error.message.includes('URL already exists')) {
-        setError('Error adding URL. Please try again.');
-      }
+      console.error('Error adding URL:', error.message);
+      setError(error.message || 'Failed to add URL. Please try again.');
     } finally {
       setLoading(false);
     }

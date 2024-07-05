@@ -40,18 +40,23 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
       data: [],
       loginByPass,
     };
-    const response = await onSubmit(formData);
-    console.log(response.status);
-    if (response.status === 'success') {
-      setChannelName('');
-      setDivSelector('');
-      setLoginByPass(exampleCode); // Reset to example code after submission
-      setSuccess(response.message);
-    } else {
-      setError(response.message);
+
+    try {
+      const response = await onSubmit(formData);
+      if (response.status === 'success') {
+        setChannelName('');
+        setDivSelector('');
+        setLoginByPass(exampleCode); // Reset to example code after submission
+        setSuccess(response.message);
+      } else {
+        setError(response.message);
+      }
+    } catch (error) {
+      setError('Error submitting form: ' + error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    };
+  };
 
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
@@ -62,64 +67,64 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl mx-auto p-8 bg-white shadow-md rounded-lg">
-      <div className="mb-6">
-        <label htmlFor="channelName" className="block text-lg font-semibold text-gray-900 mb-2">
-          Channel Name
-        </label>
-        <TextField
-          id="channelName"
-          value={channelName}
-          onChange={(e) => setChannelName(e.target.value)}
-          placeholder="Enter Channel Name"
-          variant="outlined"
-          fullWidth
-          required
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{
+        maxWidth: 'xl',
+        mx: 'auto',
+        p: 8,
+        bgcolor: 'white',
+        boxShadow: 3,
+        borderRadius: 2,
+      }}
+    >
+      <TextField
+        id="channelName"
+        value={channelName}
+        onChange={(e) => setChannelName(e.target.value)}
+        label="Enter Channel Name"
+        variant="outlined"
+        fullWidth
+        margin="normal"
+        required
+      />
+      <TextField
+        id="divSelector"
+        value={divSelector}
+        onChange={(e) => setDivSelector(e.target.value)}
+        label="Enter Div Selector"
+        variant="outlined"
+        fullWidth
+        margin="normal"
+        required
+      />
+      <Typography variant="h6" mb={2}>
+        Login ByPass
+      </Typography>
+      <Box sx={{ border: 1, borderColor: 'grey.400', borderRadius: 1 }}>
+        <Editor
+          height="400px"
+          defaultLanguage="javascript"
+          theme="vs-dark"
+          value={loginByPass}
+          onChange={handleEditorChange}
+          options={{
+            minimap: { enabled: false },
+            scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+            lineNumbers: 'on',
+            glyphMargin: false,
+            folding: false,
+            lineNumbersMinChars: 3,
+          }}
         />
-      </div>
-      <div className="mb-6">
-        <label htmlFor="divSelector" className="block text-lg font-semibold text-gray-900 mb-2">
-          Div Selector
-        </label>
-        <TextField
-          id="divSelector"
-          value={divSelector}
-          onChange={(e) => setDivSelector(e.target.value)}
-          placeholder="Enter Div Selector"
-          variant="outlined"
-          fullWidth
-          required
-        />
-      </div>
-      <div className="mb-6">
-        <label htmlFor="loginByPass" className="block text-lg font-semibold text-gray-900 mb-2">
-          Login ByPass
-        </label>
-        <Box className="border border-gray-300 rounded-md">
-          <Editor
-            height="400px" // Initial height
-            defaultLanguage="javascript"
-            theme="vs-dark"
-            value={loginByPass}
-            onChange={handleEditorChange}
-            options={{
-              minimap: { enabled: false },
-              scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
-              lineNumbers: 'on',
-              glyphMargin: false,
-              folding: false,
-              lineNumbersMinChars: 3,
-            }}
-          />
-        </Box>
-      </div>
-      <Box display="flex" justifyContent="center" mb={2}>
+      </Box>
+      <Box display="flex" justifyContent="center" mt={4}>
         <Button
           variant="contained"
           color="primary"
           type="submit"
           disabled={loading}
-          style={{ margin: '10px' }}
         >
           {loading ? 'Submitting...' : 'Submit'}
         </Button>
@@ -134,7 +139,7 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
           {success}
         </Alert>
       </Snackbar>
-    </form>
+    </Box>
   );
 };
 
