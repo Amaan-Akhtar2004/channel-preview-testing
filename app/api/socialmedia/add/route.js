@@ -11,11 +11,18 @@ export const POST = async (req) => {
     try {
       const formData = await req.json();
       console.log(formData);
+
+      // Check if the channel already exists
+      const existingChannel = await SocialMedia.findOne({ channelName: formData.channelName });
+      if (existingChannel) {
+        return new Response(JSON.stringify({ error: "Channel already exists" }), { status: 409 });
+      }
+
       const newSocialMedia = new SocialMedia(formData);
       await newSocialMedia.save();
-      return new Response(JSON.stringify({ message: "Test complete" }), { status: 201 });
+      return new Response(JSON.stringify({ message: "Channel created successfully" }), { status: 201 });
     } catch (error) {
-      return new Response(JSON.stringify(error), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
   } else {
     return new Response(JSON.stringify({ success: false, error: `Method ${req.method} Not Allowed` }), { status: 405 });

@@ -34,7 +34,10 @@ export const POST = async (req) => {
       if (!url || !channel || !scenario) {
         throw new Error('URL, channel, and scenario are required');
       }
-  
+      // Ensure the URL contains the channel name (case-insensitive check)
+      if (!url.toLowerCase().includes(channel.toLowerCase())) {
+        throw new Error(`URL does not belong to channel ${channel}`);
+      }
       await connectToDatabase();
   
       // Find the social media channel in the database
@@ -42,7 +45,6 @@ export const POST = async (req) => {
       if (!socialMediaChannel) {
         throw new Error(`Channel ${channel} not found`);
       }
-  
       // Check if the URL already exists
       const urlExists = socialMediaChannel.data.some(entry => entry.url === url);
       if (urlExists) {
@@ -62,13 +64,17 @@ export const POST = async (req) => {
   
       // Create the new object
       const newObject = { url, scenario };
-  
+      
+      const startTime = Date.now();
       // Call the external API with the appropriate parameters
       await apiCall(newObject, channel, divSelector, "reference");
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      console.log(duration);
   
       // Add the new object to the channel array
       socialMediaChannel.data.push(newObject);
-  
       // Save the updated channel document
       await socialMediaChannel.save();
   

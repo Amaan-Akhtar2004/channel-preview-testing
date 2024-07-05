@@ -2,14 +2,13 @@ import connectToDatabase from '@/app/lib/mongodb.mjs';
 import SocialMedia from '@/app/lib/models/channels.mjs';
 
 export const POST = async (req) => {
-  const selectedChannel = await req.json();
+  const {channelName} = await req.json();
 
   await connectToDatabase();
-  // console.log(selectedChannel);
+  console.log(channelName);
   
   try {
-      const channel = await SocialMedia.findOne({ channelName: selectedChannel });
-      // console.log(channel);
+      const channel = await SocialMedia.findOne({ channelName });
 
       if (!channel) {
       return new Response(JSON.stringify({ message: 'Channel not found' }), {

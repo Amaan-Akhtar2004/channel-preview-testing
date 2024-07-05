@@ -1,5 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
+import {
+  Box,
+  Button,
+  CircularProgress,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+  IconButton,
+  List,
+  ListItem,
+  Grid,
+  ListItemSecondaryAction,
+  Snackbar,
+  Alert
+} from '@mui/material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
+import DeleteConfirmationDialog from './deleteConfirmationDialog'; // Adjust path as needed
 
 export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
   const [selectedChannel, setSelectedChannel] = useState('');
@@ -12,6 +32,7 @@ export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     const fetchChannelData = async () => {
@@ -19,13 +40,12 @@ export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
         setLoading(true);
         setError('');
         try {
-          console.log(selectedChannel);
           const response = await fetch(`/api/socialmedia/fetch`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify(selectedChannel)
+            body: JSON.stringify({ channelName: selectedChannel })
           });
           if (response.ok) {
             const data = await response.json();
@@ -49,6 +69,16 @@ export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
     fetchChannelData();
   }, [selectedChannel]);
 
+  useEffect(() => {
+    if (message || error) {
+      const timer = setTimeout(() => {
+        setMessage('');
+        setError('');
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [message, error]);
+
   const handleChangeChannel = (e) => {
     setSelectedChannel(e.target.value);
   };
@@ -57,6 +87,76 @@ export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
     const newData = [...channelData.data];
     newData[index][field] = value;
     setChannelData({ ...channelData, data: newData });
+  };
+
+  const handleDeleteLink = async (index) => {
+    const linkToDelete = channelData.data[index];
+
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/socialmedia/deleteLink`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ channelName: selectedChannel, url: linkToDelete.url })
+      });
+
+      if (response.ok) {
+        const newData = [...channelData.data];
+        newData.splice(index, 1);
+        setChannelData({ ...channelData, data: newData });
+        setMessage('Link deleted successfully');
+      } else {
+        setError('Failed to delete link');
+      }
+    } catch (error) {
+      setError('Error deleting link: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  const handleDeleteChannel = async () => {
+    if (!selectedChannel) return;
+
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/socialmedia/delete`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ channelName: selectedChannel })
+      });
+      if (response.ok) {
+        setMessage('Channel deleted successfully');
+        setSelectedChannel('');
+        setChannelData({
+          channelName: '',
+          divSelector: '',
+          loginByPass: '',
+          data: []
+        });
+      } else {
+        setError('Failed to delete channel');
+      }
+    } catch (error) {
+      setError('Error deleting channel: ' + error.message);
+    } finally {
+      setLoading(false);
+      setOpenDialog(false); // Close dialog after deletion
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -78,7 +178,6 @@ export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
       });
       if (response.ok) {
         setMessage('Changes saved successfully');
-        // Reset form data
         setSelectedChannel('');
         setChannelData({
           channelName: '',
@@ -86,10 +185,6 @@ export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
           loginByPass: '',
           data: []
         });
-        // Clear the message after 3 seconds
-        setTimeout(() => {
-          setMessage('');
-        }, 3000);
       } else {
         setError('Error updating channel data');
       }
@@ -98,47 +193,58 @@ export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
     }
   };
 
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setMessage('');
+    setError('');
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl mx-auto p-8 bg-white shadow-md rounded-lg">
-      <div className="mb-6">
-        <label htmlFor="selectChannel" className="block text-lg font-semibold text-gray-900 mb-2">Select Channel</label>
-        <select
+    <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 'xl', mx: 'auto', p: 8, bgcolor: 'white', boxShadow: 3, borderRadius: 2 }}>
+      <FormControl fullWidth margin="normal">
+        <InputLabel id="selectChannelLabel">Select Channel</InputLabel>
+        <Select
+          labelId="selectChannelLabel"
           id="selectChannel"
           value={selectedChannel}
           onChange={handleChangeChannel}
-          className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          label="Select Channel"
           required
         >
-          <option value="">Select a Channel</option>
-          {channelNames.map(channelName => (
-            <option key={channelName} value={channelName}>{channelName.charAt(0).toUpperCase() + channelName.slice(1)}</option>
+          <MenuItem value="">
+            <em>Select a Channel</em>
+          </MenuItem>
+          {channelNames.map((channelName) => (
+            <MenuItem key={channelName} value={channelName}>
+              {channelName.charAt(0).toUpperCase() + channelName.slice(1)}
+            </MenuItem>
           ))}
-        </select>
-      </div>
+        </Select>
+      </FormControl>
       {selectedChannel && (
         <>
           {loading ? (
-            <div className="text-center text-blue-500">Loading...</div>
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+              <CircularProgress />
+            </Box>
           ) : (
             <>
-              {error && <div className="text-red-500 mb-4">{error}</div>}
-              {message && <div className="text-green-500 mb-4">{message}</div>}
-              <div className="mb-6">
-                <label htmlFor="editDivSelector" className="block text-lg font-semibold text-gray-900 mb-2">Div Selector</label>
-                <input
-                  type="text"
+              <FormControl fullWidth margin="normal">
+                <TextField
                   id="editDivSelector"
+                  label="Div Selector"
                   value={channelData.divSelector}
                   onChange={(e) => setChannelData({ ...channelData, divSelector: e.target.value })}
-                  className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   required
                 />
-              </div>
-              <div className="mb-6">
-                <label htmlFor="editLoginByPass" className="block text-lg font-semibold text-gray-900 mb-2">Login ByPass</label>
-                <div className="border border-gray-300 rounded-md">
+              </FormControl>
+              <FormControl fullWidth margin="normal">
+                <Typography variant="h6">Login ByPass</Typography>
+                <Box sx={{ border: 1, borderColor: 'grey.400', borderRadius: 1, mt: 1 }}>
                   <Editor
-                    height="400px" // Initial height
+                    height="400px"
                     defaultLanguage="javascript"
                     theme="vs-dark"
                     value={channelData.loginByPass}
@@ -152,46 +258,82 @@ export default function EditChannelSetupComponent({ channelNames, onSubmit }) {
                       lineNumbersMinChars: 3
                     }}
                   />
-                </div>
-              </div>
+                </Box>
+              </FormControl>
               {channelData.data.length > 0 && (
-                <div className="mb-6">
-                  <label className="block text-lg font-semibold text-gray-900 mb-2">Links</label>
-                  <ul className="space-y-4">
+                <FormControl fullWidth margin="normal">
+                  <Typography variant="h6">Links</Typography>
+                  <List>
                     {channelData.data.map((link, index) => (
-                      <li key={index} className="flex flex-col space-y-2">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Scenario</label>
-                          <input
-                            type="text"
-                            value={link.scenario}
-                            onChange={(e) => handleLinkChange(index, 'scenario', e.target.value)}
-                            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">URL</label>
-                          <input
-                            type="text"
-                            value={link.url}
-                            onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
-                            className="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          />
-                        </div>
-                      </li>
+                      <ListItem key={index} sx={{ border: '1px solid #ccc', borderRadius: '5px', p: 1, mb: 2 }}>
+                        <Grid container spacing={2} alignItems="center">
+                          <Grid item xs={11}>
+                            <TextField
+                              fullWidth
+                              label="Test Description"
+                              value={link.scenario}
+                              onChange={(e) => handleLinkChange(index, 'scenario', e.target.value)}
+                              margin="normal"
+                            />
+                          </Grid>
+                          <Grid item xs={1} sx={{ textAlign: 'right' }}>
+                            <IconButton aria-label="delete" onClick={() => handleDeleteLink(index)}>
+                              <DeleteIcon />
+                            </IconButton>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <TextField
+                              fullWidth
+                              label="URL"
+                              value={link.url}
+                              onChange={(e) => handleLinkChange(index, 'url', e.target.value)}
+                              margin="normal"
+                            />
+                          </Grid>
+                        </Grid>
+                      </ListItem>
                     ))}
-                  </ul>
-                </div>
+                  </List>
+                </FormControl>
               )}
-              <button type="submit" className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                  loading ? 'opacity-50 cursor-not-allowed' : ''
-                }`}>
-                Save Changes
-              </button>
+              <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mt: 2 }}>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={handleOpenDialog}
+                  disabled={loading}
+                >
+                  Delete Channel
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  disabled={loading}
+                >
+                  Save Changes
+                </Button>
+              </Box>
             </>
           )}
         </>
       )}
-    </form>
+      <DeleteConfirmationDialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        onDelete={handleDeleteChannel}
+        channelName={selectedChannel}
+      />
+      <Snackbar open={!!message} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="success">
+          {message}
+        </Alert>
+      </Snackbar>
+      <Snackbar open={!!error} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="error">
+          {error}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }

@@ -1,79 +1,84 @@
 "use client";
 
-import FormComponent from "../components/FormComponent";
+import { useState, useEffect } from "react";
+import AddPermalink from "../components/AddPermalink";
 import SocialMediaFormComponent from "../components/SocialMediaFormComponent";
 import EditChannelSetupComponent from "../components/EditChannelSetup";
-import Dropdown from "../components/Dropdown";
 import { getChannels } from "../utils/getchannel";
-import { useState, useEffect } from "react";
+import {
+  Container,
+  Typography,
+  Box,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export default function Home() {
   const [channels, setChannels] = useState([]);
-
+  const fetchChannels = async () => {
+    const fetchedChannels = await getChannels();
+    console.log(fetchedChannels);
+    setChannels(fetchedChannels);
+  };
   useEffect(() => {
-    const fetchChannels = async () => {
-      const fetchedChannels = await getChannels();
-      console.log(fetchedChannels);
-      setChannels(fetchedChannels);
-    };
-
     fetchChannels();
   }, []);
 
   const handleSocialMediaSubmit = async (formData) => {
-    try {
-      const response = await fetch('/api/socialmedia/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-      if (response.ok) {
-        console.log('Form submitted successfully');
-      } else {
-        console.error('Form submission failed');
-      }
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    }
-  };
+    const response = await fetch('/api/socialmedia/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    });
 
-  const handleEditSocialMedia = async (formData) => {
-    try {
-      console.log(formData);
-      const response = await fetch(`/api/socialmedia/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
-      if (response.ok) {
-        console.log('Social media data updated successfully');
-      } else {
-        console.error('Error updating social media data');
-      }
-    } catch (error) {
-      console.error('Error updating social media data:', error);
+    if (response.ok) {
+      return { status: 'success', message: 'Form submitted successfully' };
+    } else if (response.status === 409) {
+      return { status: 'error', message: 'Channel already exists' };
+    } else {
+      const errorData = await response.json();
+      return { status: 'error', message: errorData.message || 'Form submission failed' };
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4">Channel Preview Testing</h1>
+    <Container maxWidth="md">
+      <Box my={4}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Channel Preview Testing
+        </Typography>
 
-      <Dropdown title="Add New Permalink">
-        <FormComponent channels={channels} />
-      </Dropdown>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Add New Permalink</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <AddPermalink channels={channels} />
+          </AccordionDetails>
+        </Accordion>
 
-      <Dropdown title="Add Social Media Channel">
-        <SocialMediaFormComponent onSubmit={handleSocialMediaSubmit} />
-      </Dropdown>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Add Social Media Channel</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <SocialMediaFormComponent onSubmit={handleSocialMediaSubmit} fetchChannels={fetchChannels} />
+          </AccordionDetails>
+        </Accordion>
 
-      <Dropdown title="Edit Channel Setup">
-        <EditChannelSetupComponent channelNames={channels} onSubmit={handleEditSocialMedia} />
-      </Dropdown>
-    </div>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6">Edit Channel Setup</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <EditChannelSetupComponent channelNames={channels} fetchChannels = {fetchChannels} />
+          </AccordionDetails>
+        </Accordion>
+      </Box>
+    </Container>
   );
 }
