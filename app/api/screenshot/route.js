@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-extra';
-// import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { PassThrough } from 'stream';
 import cloudinary from '@/app/lib/cloudinary.mjs';
 import connectToDatabase from '@/app/lib/mongodb.mjs';
@@ -36,7 +36,7 @@ export const POST = async (req) => {
   }
 
   // Initialize Puppeteer with Stealth mode
-  // puppeteer.use(StealthPlugin());
+  puppeteer.use(StealthPlugin());
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
