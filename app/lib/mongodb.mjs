@@ -20,8 +20,11 @@ const connectToDatabase = async () => {
   }
 
   try {
-    const connection = await mongoose.connect(MONGODB_URI);
-
+    const connection = await mongoose.connect(MONGODB_URI,{
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000, // 30 seconds
+    });
     cachedConnection = connection;
     console.log('MongoDB connected');
     return connection;

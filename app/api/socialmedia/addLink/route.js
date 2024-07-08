@@ -55,6 +55,8 @@ const convertUrlByChannel = (url, channelName) => {
       return validateInstagramUrl(url);
     case 'twitter':
       return validateTwitterUrl(url);
+    case 'temp':
+      return convertFacebookUrl(url);
     default:
       return url;
   }
@@ -117,7 +119,7 @@ export const POST = async (req) => {
   try {
     // Extract the request payload
     const { url, channel, scenario } = await req.json();
-    
+    console.log(url,channel,scenario);
     if (!url || !channel || !scenario) {
       throw new Error('URL, channel, and scenario are required');
     }
@@ -155,7 +157,7 @@ export const POST = async (req) => {
 
     const startTime = Date.now();
     // Call the external API with the appropriate parameters
-    await apiCall(newObject.url, channel, divSelector, "reference");
+    await apiCall(newObject, channel, divSelector, "reference");
     const endTime = Date.now();
     const duration = endTime - startTime;
 

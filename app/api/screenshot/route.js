@@ -37,7 +37,7 @@ export const POST = async (req) => {
 
   // Initialize Puppeteer with Stealth mode
   puppeteer.use(StealthPlugin());
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
   // Set user agent
@@ -49,11 +49,9 @@ export const POST = async (req) => {
   await connectToDatabase();
   const url = link.url;
   const scenario = link.scenario;
-
   try {
     // Navigate to the provided URL
     await page.goto(url, { waitUntil: 'networkidle2' });
-
     // Iterate over defined viewports
     for (const viewport of viewports) {
       await page.setViewport(viewport);
@@ -66,7 +64,6 @@ export const POST = async (req) => {
       if (loginByPassCode) {
         await runLoginByPassCode(page, loginByPassCode);
       }
-
       // Wait for the selector to appear
       await page.waitForSelector(selector, { timeout: 60000 });
 
@@ -139,7 +136,7 @@ export const POST = async (req) => {
       }
     }
 
-    // Close Puppeteer browser and return success response
+    // Close Puppeteer browser and return success responses
     await page.close();
     await browser.close();
     return new Response(JSON.stringify({ message: "The screenshots have been generated"}), { status: 200 });

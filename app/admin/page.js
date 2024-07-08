@@ -97,7 +97,7 @@ export default function Home() {
       });
 
       if (response.ok) {
-        return { status: 'success', message: 'Form submitted successfully' };
+        return { status: 'success', message: 'Channel Added successfully' };
       } else if (response.status === 409) {
         return { status: 'error', message: 'Channel already exists' };
       } else {
