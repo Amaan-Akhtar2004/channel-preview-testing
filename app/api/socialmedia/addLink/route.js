@@ -21,7 +21,7 @@ const apiCall = async (channelUrls, channel, divSelector, directory) => {
       directory,
       channel,
     };
-
+    console.log(JSON.stringify(apiPayload));
     const response = await fetch(`${process.env.API_BASE_URL}/api/screenshot`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -154,19 +154,26 @@ export const POST = async (req) => {
 
     // Create the new object to be added
     const newObject = { url: convertedUrl, scenario };
+    // Add the new object to the channel array
+    socialMediaChannel.data.push(newObject);
+    // Save the updated channel document
+    await socialMediaChannel.save();
 
     const startTime = Date.now();
-    // Call the external API with the appropriate parameters
-    await apiCall(newObject, channel, divSelector, "reference");
+    try {
+      // Call the external API with the appropriate parameters
+      await apiCall(newObject, channel, divSelector, "reference");
+    } catch (error) {
+      // Remove the link if the API call fails
+      socialMediaChannel.data = socialMediaChannel.data.filter(entry => entry.url !== convertedUrl);
+      await socialMediaChannel.save();
+      throw error;
+    }
     const endTime = Date.now();
     const duration = endTime - startTime;
 
     console.log(duration);
 
-    // Add the new object to the channel array
-    socialMediaChannel.data.push(newObject);
-    // Save the updated channel document
-    await socialMediaChannel.save();
 
     return new Response(JSON.stringify({ message: 'URL added successfully', newObject }), {
       status: 200,

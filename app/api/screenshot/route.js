@@ -37,7 +37,7 @@ export const POST = async (req) => {
 
   // Initialize Puppeteer with Stealth mode
   puppeteer.use(StealthPlugin());
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   // Set user agent
