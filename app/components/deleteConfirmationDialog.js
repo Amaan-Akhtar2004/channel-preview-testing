@@ -7,7 +7,15 @@ import {
   Button,
   Typography
 } from '@mui/material';
-
+/**
+ * DeleteConfirmationDialog component displays a dialog box to confirm deletion of a channel.
+ * 
+ * Props:
+ * - open: Boolean, controls whether the dialog is open or closed.
+ * - onClose: Function, callback to handle dialog close event.
+ * - onDelete: Function, callback to handle deletion action.
+ * - channelName: String, name of the channel to be deleted.
+ */
 const DeleteConfirmationDialog = ({ open, onClose, onDelete, channelName }) => {
   return (
     <Dialog

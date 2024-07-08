@@ -1,21 +1,13 @@
-// pages/api/updateReferenceUrl.js
-
 import connectToDatabase from '@/app/lib/mongodb.mjs';
 import JobResult from '@/app/lib/models/resultSchema.mjs';
 import ScreenshotReference from '@/app/lib/models/ScreenshotReference.mjs';
 
-function extractPublicId(cloudinaryUrl) {
-  const regex = /\/upload\/(?:v\d+\/)?([^\.]+)/;
-  const match = cloudinaryUrl.match(regex);
-  return match ? match[1] : null;
-}
-
 export const POST = async (req, res) => {
   try {
     const { channel, referenceUrl, jobId } = await req.json();
-    console.log('Received channel:', channel);
-    console.log('Received referenceUrl:', referenceUrl);
-    console.log('Received jobId:', jobId);
+    // console.log('Received channel:', channel);
+    // console.log('Received referenceUrl:', referenceUrl);
+    // console.log('Received jobId:', jobId);
 
     if (!channel || !referenceUrl || !jobId) {
       return new Response(JSON.stringify({ error: 'channel, referenceUrl, and jobId are required' }), {

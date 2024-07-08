@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Loader from "@/app/components/loader";
 import Link from "next/link";
-import { Button } from "@mui/material";
+import { Button, Box, Typography } from "@mui/material"; // Import Typography component
 
 export default function JobGallery() {
   const pathname = usePathname();
@@ -12,6 +12,8 @@ export default function JobGallery() {
   const [loading, setLoading] = useState(false);
   const [mostRecentJobId, setMostRecentJobId] = useState(null);
   const [jobDate, setJobDate] = useState(null);
+  const [totalTests, setTotalTests] = useState(0);
+  const [failedTests, setFailedTests] = useState(0);
 
   useEffect(() => {
     fetchMostRecentJobId();
@@ -20,6 +22,7 @@ export default function JobGallery() {
   useEffect(() => {
     if (jobId) {
       fetchJobDate(jobId);
+      fetchTestCounts(jobId);
     }
   }, [jobId]);
 
@@ -65,6 +68,28 @@ export default function JobGallery() {
     }
   };
 
+  const fetchTestCounts = async (jobId) => {
+    try {
+      const response = await fetch(`/api/getTestCounts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId,
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTotalTests(data.totalTests || 0);
+        setFailedTests(data.failedTests || 0);
+      } else {
+        console.error("Failed to fetch test counts:", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to fetch test counts:", error);
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const istOptions = {
@@ -85,12 +110,25 @@ export default function JobGallery() {
     <div style={{ textAlign: "center", margin: "20px", padding: "20px", border: "1px solid #ddd", borderRadius: "10px", backgroundColor: "#f9f9f9" }}>
       <h1 className="head-text" style={{ color: "#333", marginBottom: "20px" }}>Image Gallery For Job Dated {jobDate}</h1>
       {loading ? (
-        <Loader type="TailSpin" color="#00BFFF" height={50} width={50} />
+        <Loader  color="#00BFFF" height={50} width={200} />
       ) : (
-        <ImageGallery
-          showFixedButton={mostRecentJobId === jobId}
-          jobId={jobId}
-        />
+        <>
+          <div style={{ display: "flex", justifyContent: "space-around", marginBottom: "20px" }}>
+            <Box width="30%" bgcolor="#f0f0f0" p={2} borderRadius={10}>
+              <Typography variant="body1">Total Tests: {totalTests}</Typography>
+            </Box>
+            <Box width="30%" bgcolor="#66BB6A" p={2} borderRadius={10}>
+              <Typography variant="body1">Success: {totalTests-failedTests}</Typography>
+            </Box>
+            <Box width="30%" bgcolor="#EF5350" p={2} borderRadius={10}>
+              <Typography variant="body1">Failed: {failedTests}</Typography>
+            </Box>
+          </div>
+          <ImageGallery
+            showFixedButton={mostRecentJobId === jobId}
+            jobId={jobId}
+          />
+        </>
       )}
       <Link href="/">
         <Button variant="contained" color="primary" style={{ margin: "10px" }}>

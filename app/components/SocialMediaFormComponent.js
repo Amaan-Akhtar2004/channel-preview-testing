@@ -9,6 +9,7 @@ import {
   Button,
 } from '@mui/material';
 
+// Example code for initial value of loginByPass
 const exampleCode = `// Example code:
 const closeButton = document.querySelector('div[role=button][aria-label="Close"]');
 if (closeButton) {
@@ -19,15 +20,17 @@ if (closeButton) {
 const SocialMediaFormComponent = ({ onSubmit }) => {
   const [channelName, setChannelName] = useState('');
   const [divSelector, setDivSelector] = useState('');
-  const [loginByPass, setLoginByPass] = useState(exampleCode); // Set example code as initial value
+  const [loginByPass, setLoginByPass] = useState(exampleCode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  // Handler for changes in the Monaco Editor content
   const handleEditorChange = (value, event) => {
     setLoginByPass(value);
   };
 
+  // Form submission handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -42,11 +45,11 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
     };
 
     try {
+      // Call onSubmit function passed as prop
       const response = await onSubmit(formData);
       if (response.status === 'success') {
-        setChannelName('');
-        setDivSelector('');
-        setLoginByPass(exampleCode); // Reset to example code after submission
+        // Clear form fields and reset loginByPass on success
+        clearForm();
         setSuccess(response.message);
       } else {
         setError(response.message);
@@ -58,6 +61,14 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
     }
   };
 
+  // Function to clear form fields and reset loginByPass to example code
+  const clearForm = () => {
+    setChannelName('');
+    setDivSelector('');
+    setLoginByPass(exampleCode);
+  };
+
+  // Snackbar close handler
   const handleClose = (event, reason) => {
     if (reason === 'clickaway') {
       return;
@@ -79,6 +90,7 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
         borderRadius: 2,
       }}
     >
+      {/* Channel Name TextField */}
       <TextField
         id="channelName"
         value={channelName}
@@ -89,6 +101,7 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
         margin="normal"
         required
       />
+      {/* Div Selector TextField */}
       <TextField
         id="divSelector"
         value={divSelector}
@@ -99,6 +112,7 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
         margin="normal"
         required
       />
+      {/* Login ByPass Editor */}
       <Typography variant="h6" mb={2}>
         Login ByPass
       </Typography>
@@ -119,6 +133,7 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
           }}
         />
       </Box>
+      {/* Submit Button */}
       <Box display="flex" justifyContent="center" mt={4}>
         <Button
           variant="contained"
@@ -129,11 +144,13 @@ const SocialMediaFormComponent = ({ onSubmit }) => {
           {loading ? 'Submitting...' : 'Submit'}
         </Button>
       </Box>
+      {/* Error Snackbar */}
       <Snackbar open={!!error} autoHideDuration={6000} onClose={handleClose}>
         <Alert onClose={handleClose} severity="error">
           {error}
         </Alert>
       </Snackbar>
+      {/* Success Snackbar */}
       <Snackbar open={!!success} autoHideDuration={6000} onClose={handleClose}>
         <Alert onClose={handleClose} severity="success">
           {success}

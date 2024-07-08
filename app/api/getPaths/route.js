@@ -2,7 +2,7 @@
 import connectToDatabase from '@/app/lib/mongodb.mjs';
 import JobResult from '@/app/lib/models/resultSchema.mjs';
 
-// Define the revalidate value
+// Define the revalidate value(to remove the route from ISR in vercels)
 export const revalidate = 0;
 
 // Define the GET handler
@@ -17,11 +17,17 @@ export async function GET() {
     // Format the results as required
     const formattedResults = results.map(result => ({
       jobId: result._id,
-      jobDate: result.jobDate.toLocaleString(), // Format the job date as needed
+      jobDate: result.jobDate.toLocaleString('en-GB', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      }),
     }));
-
-    // Log the formatted results for debugging
-    console.log(formattedResults);
 
     // Return the formatted results as JSON response
     return new Response(JSON.stringify(formattedResults), {

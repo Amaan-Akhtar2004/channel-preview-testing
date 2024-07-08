@@ -16,8 +16,9 @@ const PlatformSchema = new mongoose.Schema({
 
 // Define the main screenshot schema
 const ResultSchema = new mongoose.Schema({
-    // jobName: { type: String, required: true }, // Store the job name
     jobDate: { type: Date, default: Date.now }, // Store the date when the job was executed
+    totalCases: { type: Number, required: true }, // Store the total number of test cases
+    failedCases: { type: Number, required: true }, // Store the number of failed test cases
     platforms: [PlatformSchema] // Array of PlatformSchema objects
 });
 
